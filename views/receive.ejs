@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/nav') %>
+
+  <main class="max-w-lg mx-auto py-10 px-4">
+    <a href="/dashboard" class="inline-flex items-center mb-4 text-indigo-600 hover:underline">
+      <i class="fas fa-arrow-left mr-2"></i> Back to Home
+    </a>
+
+    <div class="bg-white rounded-xl shadow-md p-6 text-center">
+      <h2 class="text-2xl font-bold mb-6">Receive Ethereum</h2>
+
+      <!-- ✅ Dynamic QR Code based on wallet address -->
+      <div class="mx-auto w-48 h-48 mb-4">
+        <img src="<%= qrCodeDataURL %>" alt="QR Code">
+      </div>
+
+      <!-- ✅ Wallet address display -->
+      <div class="bg-gray-50 p-3 rounded-lg mb-4">
+        <p id="walletAddressDisplay" class="text-sm break-all"><%= user.walletAddress %></p>
+      </div>
+
+      <button onclick="copyAddress()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+        <i class="fas fa-copy mr-2"></i>Copy Address
+      </button>
+
+      <p id="copyMessage" class="text-sm text-green-600 mt-2 hidden">Address copied!</p>
+
+      <div class="mt-4 text-sm text-gray-500">
+        <p>Send only Ethereum (ETH) to this address</p>
+        <p>Sending other assets may result in permanent loss</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function copyAddress() {
+      const text = document.getElementById("walletAddressDisplay").innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        document.getElementById("copyMessage").classList.remove("hidden");
+        setTimeout(() => {
+          document.getElementById("copyMessage").classList.add("hidden");
+        }, 2000);
+      });
+    }
+  </script>
+
+  <%- include('partials/scripts') %>
+</body>
+</html>

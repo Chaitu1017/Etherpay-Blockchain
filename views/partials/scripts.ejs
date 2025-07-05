@@ -1,0 +1,160 @@
+<!-- ✅ Your existing MetaMask wallet connection script -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('connectWalletBtn');
+
+    if (typeof window.ethereum !== 'undefined') {
+      const web3 = new Web3(window.ethereum);
+
+      btn.addEventListener('click', async () => {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const address = accounts[0];
+
+          console.log('Connected MetaMask address:', address);
+          btn.textContent = address.slice(0, 6) + '...' + address.slice(-4);
+          btn.disabled = true;
+
+          const response = await fetch('/connect-wallet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ walletAddress: address })
+          });
+
+          const result = await response.json();
+          console.log('Wallet saved:', result.message);
+
+        } catch (err) {
+          alert('Connection rejected.');
+          console.error('MetaMask connection error:', err);
+        }
+      });
+
+    } else {
+      btn.textContent = 'Install MetaMask';
+      btn.addEventListener('click', () => window.open('https://metamask.io/download.html', '_blank'));
+    }
+  });
+</script>
+
+<!-- ✅ Ethereum Price Chart -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  async function fetchETHData() {
+    try {
+      const res = await fetch('https://api.coingecko.com/api/v3/coins/ethereum?localization=false&sparkline=true');
+      const data = await res.json();
+
+      const price = data.market_data.current_price.usd;
+      const change = data.market_data.price_change_percentage_24h.toFixed(2);
+      const sparkline = data.market_data.sparkline_7d.price.slice(-20); // last 20 points
+
+      document.getElementById('ethPrice').textContent = `$${price.toLocaleString()}`;
+      document.getElementById('ethChange').textContent = `${change}%`;
+      document.getElementById('ethChange').classList.add(change >= 0 ? 'text-green-500' : 'text-red-500');
+      document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+
+      const ctx = document.getElementById('ethChart').getContext('2d');
+      if (window.ethChart) window.ethChart.destroy();
+
+      window.ethChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: sparkline.length }, (_, i) => i + 1),
+          datasets: [{
+            data: sparkline,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: false },
+            y: { display: false }
+          }
+        }
+      });
+
+    } catch (err) {
+      console.error('Error fetching ETH data:', err);
+    }
+  }
+
+  fetchETHData();
+  setInterval(fetchETHData, 60000); // refresh every 60s
+</script>
+
+<!-- ✅ Extra: ETH Price, INR Conversion & Gas Estimates -->
+<script>
+  async function loadAdvancedMetrics() {
+    try {
+      const res = await fetch('https://api.coingecko.com/api/v3/coins/ethereum?localization=false&market_data=true&sparkline=true');
+      const json = await res.json();
+      const md = json.market_data;
+      const usd = md.current_price.usd;
+      const inr = md.current_price.inr;
+      const pct = md.price_change_percentage_24h.toFixed(2) + '%';
+      const sparkline = md.sparkline_7d.price.slice(-30);
+
+      const usdEl = document.getElementById('ethUsd');
+      const inrEl = document.getElementById('ethInr');
+      const pctEl = document.getElementById('ethPct');
+
+      if (usdEl && inrEl && pctEl) {
+        usdEl.textContent = `$${usd.toLocaleString()}`;
+        inrEl.textContent = `₹${inr.toLocaleString()}`;
+        pctEl.textContent = pct;
+        pctEl.className = pct.startsWith('-') ? 'text-red-500' : 'text-green-500';
+      }
+
+      const ctx2 = document.getElementById('ethSparkChart')?.getContext('2d');
+      if (ctx2) {
+        if (window.sparkChart) window.sparkChart.destroy();
+        window.sparkChart = new Chart(ctx2, {
+          type: 'line',
+          data: {
+            labels: sparkline.map((_, i) => ''),
+            datasets: [{
+              data: sparkline,
+              borderColor: '#6366f1',
+              fill: false,
+              pointRadius: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: { x: { display: false }, y: { display: false } },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      // Gas Fee Estimates (optional)
+      const apiKey = 'EFDIAQQPTUZ6VU4F1AYJRKB8QNWRYATXBA'; // 🔁 Replace this
+      const gasRes = await fetch(`https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${apiKey}`);
+      const gas = await gasRes.json();
+      const g = gas.result;
+
+      const safe = document.getElementById('gasSafe');
+      const std = document.getElementById('gasPropose');
+      const fast = document.getElementById('gasFast');
+
+      if (safe && std && fast) {
+        safe.textContent = `${g.SafeGasPrice} Gwei`;
+        std.textContent = `${g.ProposeGasPrice} Gwei`;
+        fast.textContent = `${g.FastGasPrice} Gwei`;
+      }
+
+    } catch (err) {
+      console.error('Error loading ETH metrics:', err);
+    }
+  }
+
+  loadAdvancedMetrics();
+  setInterval(loadAdvancedMetrics, 60000);
+</script>

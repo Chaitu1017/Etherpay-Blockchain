@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('partials/head') %>
+  </head>
+  <body>
+    <%- include('partials/nav') %>
+
+    <main class="max-w-4xl mx-auto px-4 py-10">
+      <!-- Back Button -->
+      <a href="/dashboard" class="inline-flex items-center mb-4 text-indigo-600 hover:underline">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Home
+      </a>
+
+      <h2 class="text-2xl font-bold mb-6">Transaction History</h2>
+
+      <% if (transactions.length > 0) { %>
+        <div class="space-y-4">
+          <% transactions.forEach(tx => { %>
+            <div class="bg-white rounded-lg shadow p-4 border-l-4
+              <%= tx.from === walletAddress ? 'border-red-500' : 'border-green-500' %>">
+              <p class="font-semibold text-gray-800">
+                <%= tx.from === walletAddress ? 'Sent' : 'Received' %> <%= tx.amount %> ETH
+              </p>
+              <p class="text-sm text-gray-600">
+                <strong><%= tx.from === walletAddress ? 'To:' : 'From:' %></strong> <%= tx.from === walletAddress ? tx.to : tx.from %>
+              </p>
+              <p class="text-sm text-gray-600">
+                <strong>Date:</strong> <%= new Date(tx.timestamp).toLocaleString() %>
+              </p>
+              <p class="text-sm">
+                <a href="https://etherscan.io/tx/<%= tx.txHash %>" target="_blank" class="text-indigo-600 hover:underline">
+                  View on Etherscan
+                </a>
+              </p>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="text-center text-gray-500">
+          <i class="fas fa-exchange-alt text-4xl mb-3"></i>
+          <p>No transaction history available.</p>
+        </div>
+      <% } %>
+    </main>
+
+    <%- include('partials/scripts') %>
+  </body>
+</html>

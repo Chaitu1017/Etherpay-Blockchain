@@ -1,0 +1,45 @@
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const connectBtn = document.getElementById('connectWalletBtn');
+
+    if (!connectBtn) return;
+
+    // Check MetaMask
+    if (typeof window.ethereum !== 'undefined') {
+      connectBtn.addEventListener('click', async () => {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const walletAddress = accounts[0];
+
+          console.log('🦊 Wallet Address:', walletAddress);
+
+          // Update button text
+          connectBtn.textContent = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+          connectBtn.disabled = true;
+
+          // Save wallet to server (MongoDB)
+          const res = await fetch('/connect-wallet', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ walletAddress })
+          });
+
+          const result = await res.json();
+          console.log('✅ Wallet connected:', result);
+
+        } catch (err) {
+          alert('❌ MetaMask connection rejected.');
+          console.error(err);
+        }
+      });
+  } 
+  else {
+    connectBtn.textContent = 'Install MetaMask';
+    connectBtn.addEventListener('click', () => {
+      window.open('https://metamask.io/download/', '_blank');
+    });
+  }
+});
+</script>

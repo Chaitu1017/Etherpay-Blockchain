@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body class="bg-gray-100 font-sans">
+  <%- include('partials/nav') %>
+
+  <main class="max-w-5xl mx-auto py-10 px-4">
+    <%- include('partials/dashboard', { activeTab: activeTab }) %>
+  </main>
+
+  <%- include('partials/scripts') %>
+</body>
+</html>
